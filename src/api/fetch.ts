@@ -1,11 +1,12 @@
-import { history } from "@umijs/max"
 import { message } from "antd"
 
 const jumpToLogin = () => {
   message.info({ content: '授权超时，正在为你跳转登录...' })
   setTimeout(() => {
     localStorage.clear()
-    history.push('/')
+    const a = document.createElement('a')
+    a.href = "http://www.itjevon.cn/"
+    a.click()
   }, 2*1000)
 }
 

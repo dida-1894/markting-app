@@ -16,12 +16,12 @@ export default defineConfig({
     // },
     {
       name: '全站计划',
-      path: '/markting/',
+      path: '/marketing/',
       component: './Home',
     },
   ],
   npmClient: 'yarn',
-  publicPath: 'http://www.itjevon.cn/marketing/',
+  // publicPath: 'http://www.itjevon.cn/marketing/',
   proxy: {
     '/api/': {
       target: 'http://www.itjevon.cn',

@@ -13,8 +13,12 @@ import { NoLimitMaxCost } from '../constants';
 import { UpdateROI } from './UpdateROI';
 
 type RangeValue = [Dayjs | null, Dayjs | null] | null;
-const TimeFormatter = 'YYYY-MM-DD'
 const submitTimeFormat = 'YYYY-MM-DD HH:mm:ss'
+const days7: RangeValue = [dayjs().subtract(8, 'day'), dayjs().subtract(1, 'day')]
+const days30: RangeValue = [dayjs().subtract(31, 'day'), dayjs().subtract(1, 'day')]
+const days90: RangeValue = [dayjs().subtract(91, 'day'), dayjs().subtract(1, 'day')]
+
+const timeList = [{ label: '7天', value: days7 }, { label: '30天', value: days30 }, { label: '90天', value: days90 }]
 
 export default () => {
   const actionRef = useRef<ActionType>();
@@ -24,8 +28,7 @@ export default () => {
   const [createShow, setCreateShow] = useState(false)
   const [showROIModal, setShowROIMdal] = useState(false)
   const [showCostMdal, setShowCostModal] = useState(false)
-  const [time, setTime] = useState({ startDate: dayjs().subtract(8, 'd').format(TimeFormatter), endDate: dayjs().subtract(1, 'D').format(TimeFormatter)  })
-  const [tempDate, setTempDate] = useState<RangeValue>(null)
+  const [tempDate, setTempDate] = useState<RangeValue>(days7)
 
   const columns: ProColumns<IMerchandiseItem>[] = [
     {
@@ -325,7 +328,7 @@ export default () => {
           selectedRowKeys
         }}
         request={(params, sorter, filter) => {
-          const _p: IAllMerchandiseParams = { ...time }
+          const _p: IAllMerchandiseParams = {}
 
           // 表单搜索项会从 params 传入，传递给后端接口。
           console.log(params, sorter, filter);
@@ -342,10 +345,6 @@ export default () => {
             _p.startDate = tempDate[0].hour(0).minute(0).second(0).format(submitTimeFormat)
             _p.endDate = tempDate[1].hour(23).minute(59).second(59).format(submitTimeFormat)
           }
-          if (!tempDate) {
-            _p.startDate = dayjs().subtract(8, 'day').hour(0).minute(0).second(0).format(submitTimeFormat)
-            _p.endDate = dayjs().subtract(1, 'day').hour(23).minute(59).second(59).format(submitTimeFormat)
-          }
 
           return getAllMerchandise(_p).then(data => {
               return { data: data?.list || [], total: data?.total || 0, success: true }
@@ -361,13 +360,30 @@ export default () => {
           filter: (
             <LightFilter>
               <DatePicker.RangePicker
+                renderExtraFooter={() => (
+                  <>{timeList.map((item, i) => (
+                      <Button
+                        key={i}
+                        type='primary'
+                        size='small'
+                        style={{ marginRight: '16px' }}
+                        onClick={() => {
+                          setTempDate(item.value)
+                          actionRef.current?.reload()
+                        }}
+                      >
+                        {item.label}
+                      </Button>
+                    ))
+                  }</>
+                )}
                 onCalendarChange={v => {
-                  console.log('======> v', v)
                   setTempDate(v as any)
                 }}
                 onChange={(v) => {
                   actionRef.current?.reload()
                 }}
+                value={tempDate}
                 disabledDate={current => {
                   if (current.isAfter(dayjs())) return true
                   if (!tempDate) return false

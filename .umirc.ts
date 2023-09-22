@@ -7,7 +7,8 @@ export default defineConfig({
   initialState: {},
   request: {},
   layout: {
-    title: '@umijs/max',
+    title: ' ',
+    logo: ' ',
   },
   routes: [
     // {
@@ -21,7 +22,7 @@ export default defineConfig({
     },
   ],
   npmClient: 'yarn',
-  // publicPath: 'http://www.itjevon.cn/marketing/',
+  publicPath: process.env.NODE_ENV === 'development' ? '/' : 'http://www.itjevon.cn/marketing/',
   proxy: {
     '/api/': {
       target: 'http://www.itjevon.cn',

@@ -1,6 +1,10 @@
 import { message } from "antd"
 
+const isdev = process.env.NODE_ENV === 'development'
+
 const jumpToLogin = () => {
+  if (isdev) return message.info({ content: '授权超时，开发状态自己处理一下...' })
+
   message.info({ content: '授权超时，正在为你跳转登录...' })
   setTimeout(() => {
     localStorage.clear()

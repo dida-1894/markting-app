@@ -350,12 +350,14 @@ export default () => {
               return { data: data?.list || [], total: data?.total || 0, success: true }
           })
         }}
+        options={false}
         toolbar={{
           search: {
             onSearch: (value: string) => {
               setSearchString(value)
               actionRef.current?.reload()
             },
+            placeholder: '请输入宝贝id'
           },
           filter: (
             <LightFilter>

@@ -26,6 +26,22 @@ export const CreateTable = (props: IProps) => {
     const [showBatch, setShowBatch] = useState(false)
     const [searchString, setSearchString] = useState('')
     const actionRef = useRef<ActionType>();
+    const [pageNumber, setPageNumber] = useState(1)
+    const [isEnd, setIsEnd] = useState(false)
+    const scrollRef = useRef(document.createElement('div'))
+    const [dataList, setDateList] = useState<IUndeclaredItem[]>([])
+
+
+    const onScrollCapture = (e) => {
+        // scrollTop会有小数点导致等式不成立，解决方案：四舍五入
+        if (
+          Math.round(scrollRef.current?.scrollTop) + scrollRef.current?.clientHeight === scrollRef.current?.scrollHeight
+        ) {
+          if (isEnd) return
+
+          actionRef.current?.reload()
+        }
+    };
 
     const undeclaredColumns: ProColumns<IUndeclaredItem>[] = [
         {
@@ -59,8 +75,8 @@ export const CreateTable = (props: IProps) => {
             width: 80,
             dataIndex: 'isOnsale',
             valueEnum: {
-                0: { text: '上架中' },
-                1: { text: '下架' },
+                0: { text: '下架' },
+                1: { text: '上架中' },
             },
         },
     ]
@@ -256,67 +272,80 @@ export const CreateTable = (props: IProps) => {
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <div style={{ width: '500px' }}>
                     <div style={{ fontWeight: 500 }}>未投放全站推广宝贝列表</div>
-                    <ProTable<IUndeclaredItem>
-                        rowKey="goodsId"
-                        actionRef={actionRef}
-                        scroll={{
-                            y: 400,
-                        }}
-                        pagination={false}
-                        rowSelection={{
-                            onChange: async (keys, rows) => {
-                                const selectedObject = selectedRows.reduce((res, cur) => {
-                                    res[cur.goodsId] = cur
-                                    return res
-                                }, {} as { [k: number|string]: IUndeclaredItem })
-                                const rowsObject = rows.reduce((res, cur) => {
-                                    res[cur.goodsId] = cur
-                                    return res
-                                }, {} as { [k: number|string]: IUndeclaredItem })
-                                try {
-                                    const { data } = await getSuggests(rows.map(({ goodsId }) => goodsId).join(','))
-                                    data.map(i => {
-                                        if (selectedObject[i.goodsId]) return selectedObject[i.goodsId]
-                                        const item = rowsObject[i.goodsId]
-                                        item.roiStatus = i.defaultBidType
-                                        item.optimizationBid = i.suggestOptimizationBid
-                                        item.targetRoi = i.suggestTargetRoi
-                                        return i
-                                    })
-                                } catch {}
-                                setSelectedRows(Object.keys({ ...rowsObject, ...selectedObject }).map(key => {
-                                    if (selectedObject[key]) return selectedObject[key]
-                                    return rowsObject[key]
-                                }))
-                            },
-                            selectedRowKeys: selectedRows.map(({ goodsId }) => goodsId)
-                        }}
-                        columns={undeclaredColumns}
-                        search={false}
-                        toolbar={{
-                            search: {
-                                onSearch: (value: string) => {
-                                    setSearchString(value)
-                                    actionRef.current?.reload()
+                    <div
+                        style={{ height: '400px', width: '500px', overflowY: 'scroll', position: 'relative' }}
+                        ref={scrollRef}
+                        onScrollCapture={onScrollCapture}
+                    >
+                        <ProTable<IUndeclaredItem>
+                            rowKey="goodsId"
+                            actionRef={actionRef}
+                            pagination={false}
+                            options={false}
+                            rowSelection={{
+                                onChange: async (keys, rows) => {
+                                    const selectedObject = selectedRows.reduce((res, cur) => {
+                                        res[cur.goodsId] = cur
+                                        return res
+                                    }, {} as { [k: number|string]: IUndeclaredItem })
+                                    const rowsObject = rows.reduce((res, cur) => {
+                                        res[cur.goodsId] = cur
+                                        return res
+                                    }, {} as { [k: number|string]: IUndeclaredItem })
+                                    try {
+                                        const { data } = await getSuggests(rows.map(({ goodsId }) => goodsId).join(','))
+                                        data.map(i => {
+                                            if (selectedObject[i.goodsId]) return selectedObject[i.goodsId]
+                                            const item = rowsObject[i.goodsId]
+                                            item.roiStatus = i.defaultBidType
+                                            item.optimizationBid = i.suggestOptimizationBid
+                                            item.targetRoi = i.suggestTargetRoi
+                                            return i
+                                        })
+                                    } catch {}
+                                    setSelectedRows(Object.keys({ ...rowsObject, ...selectedObject }).map(key => {
+                                        if (selectedObject[key]) return selectedObject[key]
+                                        return rowsObject[key]
+                                    }))
                                 },
-                            },
-                        }}
-                        request={(params) => {
-                            let goodsId
-                            if (searchString) goodsId = searchString
-                            const p = {
-                                pageSize: 1000,
-                                pageNumber: params.current,
-                                goodsId
-                            }
-                            return getUndeclared(p).then(data => {
-                                return { data: data?.list || [], total: data?.total || 0, success: true }
-                            })
-                        }}
-                    />
+                                selectedRowKeys: selectedRows.map(({ goodsId }) => goodsId)
+                            }}
+                            columns={undeclaredColumns}
+                            search={false}
+                            toolbar={{
+                                search: {
+                                    onSearch: (value: string) => {
+                                        setSearchString(value)
+                                        actionRef.current?.reload()
+                                    },
+                                placeholder: '请输入宝贝id'
+                                },
+                            }}
+                            request={() => {
+                                let goodsId
+                                if (searchString) goodsId = searchString
+                                const p = {
+                                    pageSize: 20,
+                                    pageNumber,
+                                    goodsId
+                                }
+                                return getUndeclared(p).then(data => {
+                                    const _cur = data?.pageNumber || 1
+                                    if (_cur * 20 > Number(data?.total)) setIsEnd(true)
+                                    // if (data?.list.length === 0) setIsEnd(true)
+                                    setPageNumber((data?.pageNumber || pageNumber) + 1)
+                                    const list = data?.list || []
+                                    setDateList([...dataList, ...list])
+                                    return { data: [...dataList, ...list], total: data?.total || 0, success: true }
+                                })
+                            }}
+                        />
+                        {isEnd && (<div style={{ textAlign: 'center' }}>到底了</div>)}
+                    </div>
+                    
                 </div>
                 
-                <div>
+                <div style={{ width: '650px' }}>
                     <div style={{ fontWeight: 500, display: 'flex', justifyContent: 'space-between' }}>
                         待投放全站推广宝贝列表({selectedRows.length})
 

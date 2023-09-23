@@ -116,7 +116,7 @@ export const updateGoodsStatus = async (goodsIds: string, status: 'ON'|'OFF') =>
 }
 
 export const getUndeclared = async (params: IUndeclaredParams) => {
-    return Api.get<ResponseApi<{ total: number, list: IUndeclaredItem[] }>>('pdd/tr/goods', params as Record<string, string>).then(({ code, data }) => {
+    return Api.get<ResponseApi<{ total: number, list: IUndeclaredItem[], pageNumber: number }>>('pdd/tr/goods', params as Record<string, string>).then(({ code, data }) => {
         if (code === 200) return data
     })
 }

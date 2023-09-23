@@ -269,7 +269,7 @@ export const CreateTable = (props: IProps) => {
                 })
             }}
         >
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }} className={style.custom}>
                 <div style={{ width: '500px' }}>
                     <div style={{ fontWeight: 500 }}>未投放全站推广宝贝列表</div>
                     <div

@@ -8,13 +8,9 @@ export default defineConfig({
   request: {},
   layout: {
     title: ' ',
-    logo: ' ',
+    logo: false,
   },
   routes: [
-    // {
-    //   path: '/',
-    //   redirect: '/home',
-    // },
     {
       name: '全站计划',
       path: '/marketing/',

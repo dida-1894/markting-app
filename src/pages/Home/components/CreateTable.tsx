@@ -32,7 +32,7 @@ export const CreateTable = (props: IProps) => {
     const [dataList, setDateList] = useState<IUndeclaredItem[]>([])
 
 
-    const onScrollCapture = (e) => {
+    const onScrollCapture = () => {
         // scrollTop会有小数点导致等式不成立，解决方案：四舍五入
         if (
           Math.round(scrollRef.current?.scrollTop) + scrollRef.current?.clientHeight === scrollRef.current?.scrollHeight
